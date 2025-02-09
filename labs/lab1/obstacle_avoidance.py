@@ -3,10 +3,10 @@ import random
 import picar_4wd as fc
 from enum import Enum
 
-
+SENSOR_ADJUST = 0  # To achieve a 0-degree ultrasonic sensor
 OBSTACLE_THRESHOLD = 10  # In cm
 BACKUP_TIME = 1.0  # In seconds
-TURN_TIME = 1.2  # In seconds
+TURN_TIME = 1.0  # In seconds
 FORWARD_SPEED = 30  # Motor speed (0-100)
 BACKUP_SPEED = 25  # Reverse speed (0-100)
 
@@ -16,8 +16,8 @@ class Direction(Enum):
     RIGHT = "right"
 
 
-def get_distance(degrees = 0):
-    return fc.get_distance_at(degrees)  # 0-degree ultrasonic sensor
+def get_distance(degrees = SENSOR_ADJUST):
+    return fc.get_distance_at(degrees)
 
 
 def move_forward():
