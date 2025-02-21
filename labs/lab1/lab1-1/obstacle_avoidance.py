@@ -1,27 +1,22 @@
-import time
 import random
-import picar_4wd as car
-
-OBSTACLE_THRESHOLD = 10  # In cm
-
-
-def get_distance(degrees=car.SERVO_OFFSET):
-    return car.get_distance_at(degrees)
+import picar_4wd.helpers as defaults
+import picar_4wd.helpers.navigation as car
+import picar_4wd.helpers.visuals as scan
 
 
 def turn_random():
-    direction = random.choice([car.DIRECTION.LEFT, car.DIRECTION.RIGHT])
-    car.move_left() if direction == car.DIRECTION.LEFT else car.move_right()
+    direction = random.choice([car.MOVE.LEFT, car.MOVE.RIGHT])
+    car.move_left() if direction == car.MOVE.LEFT else car.move_right()
 
 
 def obstacle_avoidance():
     print("Starting obstacle avoidance...")
 
     while True:
-        distance = get_distance()
+        distance = scan.get_flat_distance()
         print(f"Distance: {distance:.2f} cm")
 
-        if distance < OBSTACLE_THRESHOLD:
+        if distance < defaults.OBSTACLE_THRESHOLD:
             print("Obstacle detected! Avoiding...")
             car.stop()
             car.move_backward()
