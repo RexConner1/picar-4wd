@@ -11,7 +11,6 @@ from .filedb import FileDB
 from .utils import *
 import time
 from .version import __version__
-from .common import *
 
 soft_reset()
 time.sleep(0.2)
