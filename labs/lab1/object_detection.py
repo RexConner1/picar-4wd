@@ -1,7 +1,8 @@
 import tflite_runtime.interpreter as tflite
-  
-MODEL_PATH = './models/detect.tflite'
-LABELS_PATH = './models/labelmap.txt'
+
+BASE_PATH = 'picar-4wd/labs/lab1/models' 
+MODEL_PATH = '/'.join([BASE_PATH, 'detect.tflite'])
+LABELS_PATH = '/'.join([BASE_PATH, 'labelmap.txt'])
 
 
 interpreter = tflite.Interpreter(model_path=MODEL_PATH)

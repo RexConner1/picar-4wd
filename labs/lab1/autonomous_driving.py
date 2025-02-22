@@ -53,10 +53,14 @@ print(f'Starting autonomous driving...')
 while True:
     ret, frame = cap.read()
 
+    if not cap.isOpened():
+        print('Camera not detected.')
+        break
     if not ret:
+        print('Unable to capture frame.')
         continue
     image = cv2.resize(frame, (detect.height, detect.width))
-    image = np.expand_dims(image, axis=0).astype(np.float32)
+    image = np.expand_dims(image, axis=0).astype(np.uint8)
     detect.interpreter.set_tensor(detect.images['index'], image)
     detect.interpreter.invoke()
     boxes, classes, scores, detections = (detect.interpreter.get_tensor(detect.output_details[i]['index']) for i in range(4))
