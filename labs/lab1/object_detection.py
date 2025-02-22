@@ -1,7 +1,8 @@
 import tflite_runtime.interpreter as tflite
+  
+MODEL_PATH = './models/detect.tflite'
+LABELS_PATH = './models/labelmap.txt'
 
-MODEL_PATH = 'detect.tflite'
-LABELS_PATH = 'labels.txt'
 
 interpreter = tflite.Interpreter(model_path=MODEL_PATH)
 interpreter.allocate_tensors()
