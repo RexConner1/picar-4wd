@@ -5,7 +5,7 @@ import heapq
 import picar_4wd.helpers as defaults
 import picar_4wd.helpers.navigation as car
 import picar_4wd.helpers.visuals as scan
-from labs.lab1.tools import advanced_mapping as mapping, object_detection as detect
+from labs.lab1 import advanced_mapping as mapping, object_detection as detect
 from types import SimpleNamespace
 
 cap = cv2.VideoCapture(0)
