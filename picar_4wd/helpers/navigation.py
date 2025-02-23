@@ -24,12 +24,12 @@ def move_backward(motor_speed=defaults.DEFAULT_SPEED, sleep_time=defaults.DEFAUL
     stop()
 
 
-def move_left():
-    car.turn_left(defaults.DEFAULT_WAIT_TIME)
+def move_left(wait_time = defaults.DEFAULT_WAIT_TIME):
+    car.turn_left(wait_time)
 
 
-def move_right():
-    car.turn_right(defaults.DEFAULT_WAIT_TIME)
+def move_right(wait_time = defaults.DEFAULT_WAIT_TIME):
+    car.turn_right(wait_time)
 
 
 def get_speed():

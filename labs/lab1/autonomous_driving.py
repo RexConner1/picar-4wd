@@ -10,10 +10,10 @@ import object_detection as detect
 from types import SimpleNamespace
 
 cap = cv2.VideoCapture(0)
-goal_position = (75, 75)
+GOAL = (75, 25)
 
 
-def compute_a_prime(start, goal, grid):
+def compute_a_star(start, goal, grid):
     def heuristic(a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
@@ -64,9 +64,6 @@ while True:
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = np.expand_dims(image, axis=0).astype(np.uint8)
 
-    # print(f'Image shape before inference: {image.shape}')
-    # print(f'Model expects: {detect.input_shape}, dtype: {detect.images['dtype']}')
-
     detect.interpreter.set_tensor(detect.images['index'], image)
     detect.interpreter.invoke()
     boxes, classes, scores, detections = (detect.interpreter.get_tensor(detect.output_details[i]['index']) for i in range(4))
@@ -77,25 +74,30 @@ while True:
 
     for angle in mapping.SCAN_ANGLES:
         distance = scan.get_distance_at(angle)
+        print(f'Distance at angle {angle}: {distance}')
         if distance and 0 < distance < mapping.GRID_SIZE:
-            x, y = int(mapping.car_position[0] + distance * np.cos(np.radians(angle))), int(
-                mapping.car_position[1] + distance * np.sin(np.radians(angle)))
+            x = int(mapping.car_position[0] + distance * np.cos(np.radians(angle))) 
+            y = int(mapping.car_position[1] + distance * np.sin(np.radians(angle)))
             if 0 <= x < mapping.GRID_SIZE and 0 <= y < mapping.GRID_SIZE:
+                print(f'Obstacle at {x}, {y}')
                 mapping.scan_map[y, x] = 1
                 defaults.set_config(f'obstacle_{x}_{y}', 1)
 
     if distance and scan.get_flat_distance() < defaults.OBSTACLE_THRESHOLD:
-        print('Obstacle detected! Stopping.')
+        print(f'Obstacle detected at {distance} cm! Rerouting')
         car.stop()
         time.sleep(2)
-        car.move_forward(30)
+        car.move_right(30)
+
     if detected_stop:
         print('Stopping for stop sign.')
         car.stop()
-        time.sleep(3)
+        time.sleep(10)
         # car.move_forward(40)
-    path = compute_a_prime(tuple(mapping.car_position), goal_position, mapping.scan_map)
+
+    path = compute_a_star(tuple(mapping.car_position), GOAL, mapping.scan_map)
     if path:
+        print(f'Path found: {path}')
         mapping.car_position = list(path[0])
         car.move_forward(40)
     cv2.imshow('PiCar-4WD Autonomous Mode', frame)

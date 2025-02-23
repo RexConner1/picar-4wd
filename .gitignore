@@ -1,3 +1,5 @@
 .vscode/*
 *.DS_Store
 *.pyc
+/build
+*.egg
