@@ -1,7 +1,7 @@
 import os
 import tflite_runtime.interpreter as tflite
 
-BASE_PATH = os.path.expanduser('~/picar-4wd/labs/lab1/models')
+BASE_PATH = os.path.expanduser('~/picar-4wd/picar-4wd/models')
 MODEL_PATH = os.path.join(BASE_PATH, 'detect.tflite')
 LABELS_PATH = os.path.join(BASE_PATH, 'labelmap.txt')
 
