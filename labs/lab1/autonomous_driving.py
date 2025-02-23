@@ -5,8 +5,8 @@ import heapq
 import picar_4wd.helpers as defaults
 import picar_4wd.helpers.navigation as car
 import picar_4wd.helpers.visuals as scan
-from labs.lab1 import advanced_mapping as mapping
-from labs.lab1 import object_detection as detect
+import advanced_mapping as mapping
+import object_detection as detect
 from types import SimpleNamespace
 
 cap = cv2.VideoCapture(0)
@@ -59,8 +59,14 @@ while True:
     if not ret:
         print('Unable to capture frame.')
         continue
-    image = cv2.resize(frame, (detect.height, detect.width))
+
+    image = cv2.resize(frame, (detect.width, detect.height))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = np.expand_dims(image, axis=0).astype(np.uint8)
+
+    # print(f'Image shape before inference: {image.shape}')
+    # print(f'Model expects: {detect.input_shape}, dtype: {detect.images['dtype']}')
+
     detect.interpreter.set_tensor(detect.images['index'], image)
     detect.interpreter.invoke()
     boxes, classes, scores, detections = (detect.interpreter.get_tensor(detect.output_details[i]['index']) for i in range(4))
@@ -71,14 +77,14 @@ while True:
 
     for angle in mapping.SCAN_ANGLES:
         distance = scan.get_distance_at(angle)
-        if 0 < distance < mapping.GRID_SIZE:
+        if distance and 0 < distance < mapping.GRID_SIZE:
             x, y = int(mapping.car_position[0] + distance * np.cos(np.radians(angle))), int(
                 mapping.car_position[1] + distance * np.sin(np.radians(angle)))
             if 0 <= x < mapping.GRID_SIZE and 0 <= y < mapping.GRID_SIZE:
                 mapping.scan_map[y, x] = 1
                 defaults.set_config(f'obstacle_{x}_{y}', 1)
 
-    if scan.get_flat_distance() < 20:
+    if distance and scan.get_flat_distance() < defaults.OBSTACLE_THRESHOLD:
         print('Obstacle detected! Stopping.')
         car.stop()
         time.sleep(2)
@@ -87,7 +93,7 @@ while True:
         print('Stopping for stop sign.')
         car.stop()
         time.sleep(3)
-        car.move_forward(40)
+        # car.move_forward(40)
     path = compute_a_prime(tuple(mapping.car_position), goal_position, mapping.scan_map)
     if path:
         mapping.car_position = list(path[0])
