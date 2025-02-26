@@ -3,9 +3,16 @@ import picar_4wd.helpers as defaults
 from enum import Enum
 import picar_4wd as car
 
+TURN_TIME_PER_DEGREE = 0.1
+
+
 class MOVE(Enum):
     LEFT = 'left'
     RIGHT = 'right'
+
+
+def __convert_degrees_to_time(degrees):
+    return abs(degrees) * TURN_TIME_PER_DEGREE
 
 
 def stop():
@@ -24,12 +31,14 @@ def move_backward(motor_speed=defaults.DEFAULT_SPEED, sleep_time=defaults.DEFAUL
     stop()
 
 
-def move_left(wait_time = defaults.DEFAULT_WAIT_TIME):
-    car.turn_left(wait_time)
+def move_left(degrees=45):
+    time = __convert_degrees_to_time(degrees)
+    car.turn_left(time)
 
 
-def move_right(wait_time = defaults.DEFAULT_WAIT_TIME):
-    car.turn_right(wait_time)
+def move_right(degrees=45):
+    time = __convert_degrees_to_time(degrees)
+    car.turn_right(time)
 
 
 def get_speed():

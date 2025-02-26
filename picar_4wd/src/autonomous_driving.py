@@ -4,30 +4,38 @@ import time
 import heapq
 import picar_4wd.helpers as defaults
 import picar_4wd.helpers.navigation as car
-import picar_4wd.helpers.visuals as scan
 import advanced_mapping as mapping
 import object_detection as detect
 from types import SimpleNamespace
 
-cap = cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0)
 GOAL = (75, 25)
 
 
-def compute_a_star(start, goal, grid):
+def reconstruct_path(past, present):
+    path = []
+    while present in past:
+        present = past[present]
+        path.append(present)
+
+
+def compute_a_star(start, goal):
+    grid = mapping.scan_map
     def heuristic(a, b):
         return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
-    open_list = [(0, start)]
-    came_from, g_score, f_score = {}, {start: 0}, {start: heuristic(start, goal)}
-    while open_list:
-        _, current = heapq.heappop(open_list)
+    open_cell_list = []
+    heapq.heappush(open_cell_list, (0, start))
+    came_from = {}
+    g_score = {start: 0}
+    f_score = {start: heuristic(start, goal)}
+    visited = set()
+    
+    while open_cell_list:
+        _, current = heapq.heappop(open_cell_list)
 
         if current == goal:
-            route = []
-            while current in came_from:
-                route.append(current)
-                current = came_from[current]
-            return route[::-1]
+            reconstruct_path(came_from, current)
 
         for direction in mapping.DIRECTION:
             dx, dy = direction.value
@@ -37,74 +45,38 @@ def compute_a_star(start, goal, grid):
 
             x_coord_within_grid = 0 <= there.x < mapping.GRID_SIZE
             y_within_grid = 0 <= there.y < mapping.GRID_SIZE
-            neighbor_accessible = grid[neighbor[1]][neighbor[0]] == 0
+            neighbor_accessible = grid[there.y][there.x] == 1
+            tentative_g_score = g_score[current] + 1
+            neighbor_g_score = g_score[neighbor]
+            neighbor_advantage = tentative_g_score < neighbor_g_score
 
-            if x_coord_within_grid and y_within_grid and neighbor_accessible:
-                tentative_g_score = g_score[current] + 1
-                if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+            if x_coord_within_grid and y_within_grid:
+                if neighbor_accessible or (neighbor in visited and not neighbor_advantage):
+                    continue
+                if neighbor_advantage:
                     came_from[neighbor] = current
                     g_score[neighbor] = tentative_g_score
                     f_score[neighbor] = tentative_g_score + heuristic(neighbor, goal)
-                    heapq.heappush(open_list, (f_score[neighbor], neighbor))
-    return []
+                    heapq.heappush(open_cell_list, (f_score[neighbor], neighbor))
+    return None
 
 
 print(f'Starting autonomous driving...')
 while True:
-    ret, frame = cap.read()
-
-    if not cap.isOpened():
+    ret, frame = camera.read()
+    if not camera.isOpened():
         print('Camera not detected.')
         break
     if not ret:
         print('Unable to capture frame.')
         continue
 
-    image = cv2.resize(frame, (detect.width, detect.height))
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = np.expand_dims(image, axis=0).astype(np.uint8)
+    mapping.build_grid()
+    detect.detected_stop_sign()
+    path = compute_a_star(tuple(mapping.current_position), GOAL)
+    mapping.follow_path(path)
 
-    detect.interpreter.set_tensor(detect.images['index'], image)
-    detect.interpreter.invoke()
-    boxes, classes, scores, detections = (detect.interpreter.get_tensor(detect.output_details[i]['index']) for i in range(4))
-
-    detected_stop = any(
-        'stop sign' in detect.labels[int(classes[0][i])].lower() for i in range(len(scores[0])) if scores[0][i] > 0.5
-    )
-
-    for angle in mapping.SCAN_ANGLES:
-        distance = scan.get_distance_at(angle)
-        print(f'Distance at angle {angle}: {distance}')
-        if distance and 0 < distance < mapping.GRID_SIZE:
-            x = int(mapping.car_position[0] + distance * np.cos(np.radians(angle))) 
-            y = int(mapping.car_position[1] + distance * np.sin(np.radians(angle)))
-            if 0 <= x < mapping.GRID_SIZE and 0 <= y < mapping.GRID_SIZE:
-                print(f'Obstacle at {x}, {y}')
-                mapping.scan_map[y, x] = 1
-                defaults.set_config(f'obstacle_{x}_{y}', 1)
-
-    if distance and scan.get_flat_distance() < defaults.OBSTACLE_THRESHOLD:
-        print(f'Obstacle detected at {distance} cm! Rerouting')
-        car.stop()
-        time.sleep(2)
-        car.move_right(30)
-
-    if detected_stop:
-        print('Stopping for stop sign.')
-        car.stop()
-        time.sleep(10)
-        # car.move_forward(40)
-
-    path = compute_a_star(tuple(mapping.car_position), GOAL, mapping.scan_map)
-    if path:
-        print(f'Path found: {path}')
-        mapping.car_position = list(path[0])
-        car.move_forward(40)
-    cv2.imshow('PiCar-4WD Autonomous Mode', frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-cap.release()
+camera.release()
 cv2.destroyAllWindows()
 car.stop()
 print("Full Autonomy Stopped.")
