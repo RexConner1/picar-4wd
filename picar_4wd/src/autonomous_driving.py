@@ -1,6 +1,4 @@
 import cv2
-import numpy as np
-import time
 import heapq
 import picar_4wd.helpers as defaults
 import picar_4wd.helpers.navigation as car
@@ -8,9 +6,7 @@ import advanced_mapping as mapping
 import object_detection as detect
 from types import SimpleNamespace
 
-camera = cv2.VideoCapture(0)
 GOAL = (75, 25)
-
 
 def reconstruct_path(past, present):
     path = []
@@ -63,8 +59,8 @@ def compute_a_star(start, goal):
 
 print(f'Starting autonomous driving...')
 while True:
-    ret, frame = camera.read()
-    if not camera.isOpened():
+    ret, frame = detect.camera.read()
+    if not detect.camera.isOpened():
         print('Camera not detected.')
         break
     if not ret:
@@ -76,7 +72,7 @@ while True:
     path = compute_a_star(tuple(mapping.current_position), GOAL)
     mapping.follow_path(path)
 
-camera.release()
+detect.camera.release()
 cv2.destroyAllWindows()
 car.stop()
 print("Full Autonomy Stopped.")

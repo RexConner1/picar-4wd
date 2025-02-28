@@ -1,7 +1,6 @@
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-import time
 import picar_4wd.helpers as defaults
 import picar_4wd.helpers.navigation as car
 import picar_4wd.helpers.visuals as scan

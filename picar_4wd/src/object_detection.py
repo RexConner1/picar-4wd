@@ -5,7 +5,7 @@ import picar_4wd.helpers.navigation as car
 import tflite_runtime.interpreter as tflite
 import time
 
-BASE_PATH = os.path.expanduser('~/picar-4wd/picar-4wd/models')
+BASE_PATH = os.path.expanduser('~/picar-4wd/picar_4wd/models')
 MODEL_PATH = os.path.join(BASE_PATH, 'detect.tflite')
 LABELS_PATH = os.path.join(BASE_PATH, 'labelmap.txt')
 

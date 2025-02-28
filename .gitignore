@@ -4,3 +4,4 @@
 /build
 *.egg
 /picar_4wd.egg-info
+/.idea
